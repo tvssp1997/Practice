@@ -1,0 +1,23 @@
+---
+- name: create jenkins for cicd
+  hosts: all
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: create jenkins container
+      docker_container:
+        name: myjenkins
+        image: jenkins/jenkins
+        ports:
+          - 5050:8080
+    - name: create tomcat as qaserver and prod server
+      docker_container:
+        name: "{{item.a}}"
+        image: tomee
+        ports:
+          - "{{item.b}"
+        links:
+          - myjenkins:jenkins
+        with_items:
+          - {a: qaserver, b:"6060:8080"}
+          - {a: prodserver, b:"7070:8080"}

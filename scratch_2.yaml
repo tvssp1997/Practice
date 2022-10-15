@@ -1,0 +1,39 @@
+---
+- name: configuring tomcat9
+  hosts: all
+  tasks:
+    - name: install tomcat9
+      apt:
+        name: tomcat9
+        state: present
+        update_cache: yes
+    - name: install tomcat9-admin
+      apt:
+        name: tomcat9-admin
+        state: present
+    - name: copy tomcat-users.xml
+      copy:
+        src: tomcat-users.xml
+        dest: /etc/tomcat9
+    - name: change the port from 8080 to 8888
+      replace:
+        regexp: 8080
+        replace: 8888
+        path: /etc/tomcat9/server.xml
+    - name: restart service
+      service:
+        name: tomcat9
+        state: restarted
+    - name: pause for few seconds
+      pause:
+        minutes: 1
+    - name: check the statuscode
+      uri:
+        url: http://172.31.21.106:8888
+        status_code: 200
+    - name: check the another status
+      uri:
+        url: http://172.31.23.183:8888
+        status_code: 200
+
+...

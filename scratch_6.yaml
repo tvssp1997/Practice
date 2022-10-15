@@ -1,0 +1,37 @@
+---
+- name: configuring tomcat9
+  hosts: all
+  tasks:
+    - name: install tomcat9 and tomcat9-admin
+      apt:
+        name: "{{item.a}}"
+        state: "{{item.b}}"
+        update_cache: "{{item.c}}"
+      with_items:
+        - {a: tomcat9, b: present ,c: yes}
+        - {a: tomcat9-admin, b: present ,c: yes}
+    - name: copy tomcat-users.xml
+      copy:
+        src: tomcat-users.xml
+        dest: /etc/tomcat9
+    - name: change the port from 8888 to 9999
+      replace:
+        regexp: 8888
+        replace: 9999
+        path: /etc/tomcat9/server.xml
+    - name: restart service
+      service:
+        name: tomcat9
+        state: restarted
+    - name: pause for few seconds
+      pause:
+        minutes: 1
+    - name: check the statuscode
+      uri:
+        url: "{{items}}"
+        status_code: 200
+      with_items:
+        - http://172.31.21.106:9999
+        - http://172.31.23.183:9999
+
+...

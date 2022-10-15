@@ -1,0 +1,22 @@
+---
+- name: create multiple users
+  hosts: all
+  tasks:
+    - name: create users
+      user:
+        name: "{{item.a}}"
+        password: "{{item.b}}"
+        home: "{{item.c}}"
+      with_items:
+        - {a: sai, b: admin123 , c: /tmp/sai}
+        - {a: prakash, b: admin123 , c: /tmp/prakash}
+        - {a: satya, b: admin123 , c: /tmp/satya}
+    - name: copy files
+      copy:
+        src: "{{item.a}}"
+        dest: "{{item.b}}"
+      with_items:
+        - {a: /etc/passwd, b: /tmp/sai}
+        - {a: /etc/passwd, b: /tmp/prakash}
+        - {a: /etc/passwd, b: /tmp/satya}
+...

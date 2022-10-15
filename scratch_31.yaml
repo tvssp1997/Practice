@@ -1,0 +1,16 @@
+---
+- name: download docker images
+  hosts: all
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: pull docker images
+      docker_image:
+        name: "{{item}}"
+        source: pull
+      with_items:
+        - tomee
+        - ubuntu
+        - mysql
+        - mariadb
+...

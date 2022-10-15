@@ -1,0 +1,13 @@
+---
+- name: call multiple playbooks
+  hosts: all
+  become: yes
+  tasks:
+    - name: call multiple playbooks
+      include: "{{item}}"
+      with_items:
+        - install.yml
+        - edit_index.yml
+        - restart/yml
+        - check_url_response/yml
+...

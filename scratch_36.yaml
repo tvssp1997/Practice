@@ -1,0 +1,151 @@
+cd /etc/ansible/roles
+
+sudo ansible-galaxy init tomcat --offline
+cd tasks
+sudo vim main.yml
+---
+# tasks file
+- include: install.yml
+- include: configure.yml
+- include: restart.yml
+
+- name: call child objects
+  include: "{{item}}"
+  with_items:
+    - install.yml
+    - configure.yml
+    - restart.yml
+
+sudo vim install.yml
+without variables
+---
+- name: install tomcat9 and tomcat9-admin
+  apt:
+    name: "{{item.a}}"
+    state: "{{item.b}}"
+    update_cache: "{{item.c}}"
+  with_items:
+    - {a:tomcat9 ,b: present ,c: yes}
+    - {a:tomcat9-admin ,b: present ,c: no}
+
+with variables
+
+---
+- name: install tomcat9 and tomcat9-admin
+  apt:
+    name: "{{item.a}}"
+    state: "{{item.b}}"
+    update_cache: "{{item.c}}"
+    with_items:
+      - { a: "{{pkg1}}" ,b: "{state1}}" ,c: "{{cache1}}" }
+      - { a: "{{pkg2}}" ,b: "{state1}}" ,c: "{{cache2}}" }
+
+cd vars
+sudo vim main.yml
+
+---
+#vars file
+pkg1: tomcat9
+pkg2: tomcat9-admin
+state1: present
+cache1: yes
+cache2: no
+
+cd tasks
+sudo vim configure.yml
+without variables
+---
+- name: configure tomcat-users.xml
+  copy:
+    src: tomcat-users.xml
+    dest: /etc/tomcat9
+- name: change port from 8080 to 9090
+  replace:
+    regexp: 8080
+    replace: 9090
+    path: /etc/tomcat9/server.xml
+  notify: check url response
+
+with variables
+---
+- name: configure tomcat-users.xml
+  copy:
+    src: "{{file1}}"
+    dest: "{{dest1}}"
+- name: change port from 8080 to 9090
+  replace:
+    regexp: "{{port1}}"
+    replace: "{{port2}}"
+    path: "{{path1}}"
+...
+
+cd tasks
+sudo vim restart.yml
+
+without variables
+---
+- name: restart tomcat
+  service:
+    name: tomcat9
+    state: present
+...
+with variables
+
+---
+- name: restart tomcat
+  service:
+    name: "{{pkg1}}"
+    state: "{{state2}}"
+- name: pause for 1 min
+  pause:
+    minutes: "{{min}}"
+...
+
+
+cd vars/
+sudo vim main.yml
+pkg1: tomcat9
+pkg2: tomcat9-admin
+state1: present
+state2: restarted
+cache1: yes
+cache2: no
+file1: tomcat-users.xml
+dest1: /etc/tomcat9
+port1: 8080
+port2: 9090
+path1: /etc/tomcat9/server.xml
+min: 60
+server1: "http://172.31.21.106:9090"
+server2: "http://172.31.23.183:9090"
+status1: 200
+
+
+cd files
+sudo cp ~/home.ubuntu/tomcat-users.xml
+
+cd handlers
+sudo vim main.yml
+
+---
+- name: check url response
+  uri:
+    url: "{{item.a}}"
+    status_code: "{{item.b}}"
+  with_items:
+    - {a: "{{server1}}", b: "{{status1}}"}
+    - {a: "{{server2}}", b: "{{status1}}"}
+
+roles can be called via master playbook file
+
+sudo vim configure_tomcat.yml
+---
+- name: configure tomcat with roles
+  hosts: all
+  become: yes
+  roles:
+    - tomcat
+...
+
+execute the command
+ansible-playbook configure_tomcat.yml

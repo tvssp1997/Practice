@@ -1,0 +1,21 @@
+---
+- name: docker compose
+  hosts: all
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: create a mysql container
+      docker_container:
+        name: mydb
+        image: mysql:5
+        env:
+          MYSQL_ROOT_PASSWORD: admin123
+    - name: create wordpress container
+      docker_container:
+        name: wordpress
+        image: wordpress
+        ports:
+          - 8080:80
+        links:
+          - mydb:mysql
+...

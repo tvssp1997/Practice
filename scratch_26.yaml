@@ -1,0 +1,25 @@
+---
+- name: create cicd
+  hosts: all
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: create jenkins
+      docker_container:
+        image: jenkins/jenkins
+        ports:
+          - 5050:8080
+    - name: create tomcat as qa server
+      docker_container:
+        name: qaserver
+        image: tomee
+        ports:
+          - 6060:8080
+    - name: create tomact as prod srver
+      docker_container:
+        name: prodserver
+        image: tomee
+        ports:
+          - 7070:8080
+        links:
+          - myjenkins:jenkins

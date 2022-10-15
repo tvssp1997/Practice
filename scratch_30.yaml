@@ -1,0 +1,11 @@
+---
+- name: download docker images
+  hosts: all
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: pull docker images
+      docker_image:
+        name: tomee
+        source: pull
+...

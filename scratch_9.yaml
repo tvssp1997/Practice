@@ -1,0 +1,29 @@
+---
+- name: configure apache
+  hosts: all
+  tasks:
+    - name: install apache2
+      apt:
+        name: apache2
+        state: present
+        update_cache: yes
+      notify: check url response
+    - name: edit the index file
+      copy:
+        content: "Welcome to World"
+        dest: /var/www/html/index.html
+      notify: restart
+  handlers:
+    - name: restart
+      service:
+        name: apache2
+        state: restarted
+    - name: check url response
+      uri:
+        url: "{{item}}"
+        status_code: 200
+      with_items:
+        - http://172.31.21.106
+        - http://172.31.23.183
+
+...

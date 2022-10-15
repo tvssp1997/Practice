@@ -1,0 +1,19 @@
+---
+- name: check folder and if there is no folder then create file
+  hosts: all
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: create folder f1
+      stat:
+        path: /home/ubuntu
+      register: a
+    - name: display output of above module
+      debug:
+        var: a
+    - name: create f1 file and if not present create
+      file:
+        name: /home/ubuntu/f1
+        state: touch
+      when: a.stat.exists == false
+...

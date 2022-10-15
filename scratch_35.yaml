@@ -1,0 +1,243 @@
+roles present in website: galaxy.ansible.com
+
+cd /etc/ansible/roles - roles created
+
+To create ansible role
+cmd : sudo ansible-galaxy init apache --offline
+
+cd apache
+tree
+
+default structure for roles :
+
+apache
+	README.md
+	defaults
+		main.yml
+	files
+	handlers
+		main.yml
+	meta
+		main.yml
+	tasks
+		main.yml
+	templates
+	tests
+		inventory
+		test.yml
+	vars
+		main.yml
+		
+defaults - information about the versions etc
+files - configuration files will be stored 
+handlers - those work after the tasks if the other modules has made some changes
+meta - data about data - metadata
+tasks - tasks which need to be in process 
+templates - any files which need to be changed then here it is stored like tomcat-users.xml
+tests - to do testing
+vars - all the global, playscope varibles are stored in this folder
+
+
+cd apache 
+ls
+cd tasks
+sudo vim main.yml
+
+---
+# tasks file for apache
+- include: install.yml
+- include: configure.yml
+- include: check_url_response.yml
+...
+
+create the yml files which are written in tasks file
+
+sudo vim install.yml
+
+---
+- name: install apache2
+  apt:
+	name: apache2
+	state: present
+	update_cache: yes
+...
+
+sudo vim configure.yml
+
+---
+- name: copy index.html file
+  copy:
+	src: index.html
+	dest: /var/www/html/
+  notify: restart apache
+...
+
+sudo vim check_url_response.yml
+
+---
+- name: check_url_response of apache
+  uri:
+    url: "{{item}}"
+    status_code: 200
+  with_items:
+	- http://172.31.21.106
+	- http://172.31.23.183
+...
+
+
+go to dir files:
+
+
+cd files
+ls
+
+sudo vim index.html
+
+<html>
+	<body>
+		<h1> Welcome </h1>
+	</body>
+</html>
+
+this file should be placed in files folder
+
+cd handlers
+ls
+
+sudo vim main.yml
+
+---
+-   name: restart apache
+    service:
+        name: apache2
+        state: restarted
+...
+
+now the tree of role will be displayed as show below
+
+go to /etc/ansible/roles folder
+
+apache
+	README.md
+	defaults
+		main.yml
+	files
+        index.html
+	handlers
+		main.yml
+	meta
+		main.yml
+	tasks
+        install.yml
+        configure.yml
+        check_url_response.yml
+		main.yml
+	templates
+	tests
+		inventory
+		test.yml
+	vars
+		main.yml
+
+
+To execute entire playbook :
+
+sudo vim configure_apache.yml
+---
+- name: configure apache using roles
+  hosts: all
+  become: yes
+  roles:
+    - apache
+...
+
+# -b is not required because i have already defined in configure_apache file as become = yes
+ansible-playbook configure_apache.yml
+
+
+# status of first time execution
+
+[DEPRECATION WARNING]: "include" is deprecated, use include_tasks/import_tasks instead. This feature will be removed in version 2.16.
+Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.
+
+PLAY [configure apache using roles] *************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************
+ok: [172.31.23.183]
+ok: [172.31.21.106]
+
+TASK [apache : install apache2] *****************************************************************************************************************
+ok: [172.31.21.106]
+ok: [172.31.23.183]
+
+TASK [apache : copy index.html file] ************************************************************************************************************
+changed: [172.31.21.106]
+changed: [172.31.23.183]
+
+TASK [apache : check_url_response of apache] ****************************************************************************************************
+ok: [172.31.21.106] => (item=http://172.31.21.106)
+ok: [172.31.23.183] => (item=http://172.31.21.106)
+ok: [172.31.21.106] => (item=http://172.31.23.183)
+ok: [172.31.23.183] => (item=http://172.31.23.183)
+
+RUNNING HANDLER [apache : restart apache] *******************************************************************************************************
+changed: [172.31.21.106]
+changed: [172.31.23.183]
+
+PLAY RECAP **************************************************************************************************************************************
+172.31.21.106              : ok=5    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+172.31.23.183              : ok=5    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+
+# status of second time execution - handler will be executed second time as there is no change done in the configuration files
+
+[DEPRECATION WARNING]: "include" is deprecated, use include_tasks/import_tasks instead. This feature will be removed in version 2.16.
+Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.
+
+PLAY [configure apache using roles] *************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************
+ok: [172.31.23.183]
+ok: [172.31.21.106]
+
+TASK [apache : install apache2] *****************************************************************************************************************
+ok: [172.31.21.106]
+ok: [172.31.23.183]
+
+TASK [apache : copy index.html file] ************************************************************************************************************
+ok: [172.31.21.106]
+ok: [172.31.23.183]
+
+TASK [apache : check_url_response of apache] ****************************************************************************************************
+ok: [172.31.21.106] => (item=http://172.31.21.106)
+ok: [172.31.23.183] => (item=http://172.31.21.106)
+ok: [172.31.21.106] => (item=http://172.31.23.183)
+ok: [172.31.23.183] => (item=http://172.31.23.183)
+
+PLAY RECAP **************************************************************************************************************************************
+172.31.21.106              : ok=4    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+172.31.23.183              : ok=4    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

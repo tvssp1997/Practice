@@ -1,0 +1,10 @@
+---
+- name: create user
+  hosts: all
+  tasks:
+    - name: create user
+      user:
+        name: sap
+        password: sap123
+        home: /tmp/sap
+...
